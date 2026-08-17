@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Bắt đầu định nghĩa bảng người dùng
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  fullName     String
+  role         String   @default("USER")
+  refreshToken String?
+  createdAt    DateTime @default(now())
+
+  cart   Cart?
+  orders Order[]
+  reviews Review[]
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id    Int    @id @default(autoincrement())
+  name  String
+  price Int
+
+  // Khóa ngoại
+  categoryId Int
+
+  // Khai báo mối quan hệ với bảng category
+  category Category @relation(fields: [categoryId], references: [id])
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  reviews Review[]
+}
+
+model Cart {
+  id Int @id @default(autoincrement())
+
+  // Khóa ngoại đối vớ User (Quan hệ 1-1)
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  // 1. Giỏ hàng chứa nhiều món (Quan hệ 1-N)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id Int @id @default(autoincrement())
+
+  // 1. Quan hệ với Bảng Giỏ hàng (1-N)
+  cartId Int
+  cart   Cart @relation(fields: [cartId], references: [id])
+
+  // 2. Quan hệ với Bảng Sản phẩm (1-N)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Số lượng
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  totalAmount Int
+  status      String @default("PENDING") // Trạng thái: PENDING, COMPLETED, CANCELLED
+
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+  price    Int
+}
+
+model Review {
+  id Int @id @default(autoincrement())
+  content String 
+  rating Int 
+
+  // Khóa ngoại
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+
+  productId Int
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}

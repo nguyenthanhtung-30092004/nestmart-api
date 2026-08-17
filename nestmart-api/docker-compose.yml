@@ -1,0 +1,26 @@
+services:
+  postgres-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 30092004
+      POSTGRES_DB: nestmart_db
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+
+  # Hộp 3: Ứng dụng nestjs
+  api:
+    build: . # Bảo docker đọc cái Dockerfile ở trên để đóng gói
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres-db
+      - redis
+    env_file:
+      - .env # Nạp file biến môi trường vào hộp
